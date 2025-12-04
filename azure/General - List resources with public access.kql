@@ -1,0 +1,18 @@
+//This kql needs to be adapted. Currently, "Internet" Service Tags are not in scope of the check
+resources
+| where tostring(properties.networkAcls.defaultAction) =~ "Allow"   // Public Access for storage accounts & key vault
+   or tostring(properties.networkAcls.bypass) =~ "AzureServices"   // Allows access from all azure services
+   or tostring(properties.publicNetworkAccess) =~ "Enabled"        // Allows public network access
+   or tostring(properties.firewallRules) has "0.0.0.0"
+   or tostring(properties.ipRules) has "0.0.0.0"
+   or tostring(properties.networkAcls.ipRules) has "0.0.0.0"
+   or tostring(properties.serverFirewallRules) has "0.0.0.0"
+| project name, type, location, resourceGroup, subscriptionId,
+          publicAccessConfig = bag_pack(
+              "networkDefaultAction", tostring(properties.networkAcls.defaultAction),
+              "bypass", tostring(properties.networkAcls.bypass),
+              "publicNetworkAccess", tostring(properties.publicNetworkAccess),
+              "firewallRules", tostring(properties.firewallRules),
+              "ipRules", tostring(properties.ipRules)
+          )
+| order by subscriptionId, resourceGroup
