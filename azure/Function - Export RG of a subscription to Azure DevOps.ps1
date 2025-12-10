@@ -34,7 +34,7 @@ Connect-AzAccount -Identity
 Set-AzContext -Subscription "$env:subscriptionToExport"
 
 # Get an object with a token for the Azure DevOps REST API as a secure string.
-$tokenResponse = Get-AzAccessToken -ResourceUrl "<AZURE DEVOPS RESOURCE URL>" -AsSecureString
+$tokenResponse = Get-AzAccessToken -ResourceUrl "499b84ac-1321-427f-aa17-267ca6975798" -AsSecureString
 
 # Store the token with System.Security.SecureString.
 $secureToken = $tokenResponse.Token
