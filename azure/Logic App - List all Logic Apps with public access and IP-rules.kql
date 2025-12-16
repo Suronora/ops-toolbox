@@ -1,0 +1,25 @@
+// This query retrieves Azure Logic Apps where Public Network Access is not disabled.
+// It extracts the current state, the type of the first trigger, and determines 
+// if specific IP whitelisting (Firewall rules) is configured.
+resources
+| where type == "microsoft.logic/workflows"
+// Extract status (Enabled/Disabled)
+| extend State = tostring(properties.state)
+// Check Public Network Access only for filtering
+| extend publicNetworkAccess = tostring(properties.publicNetworkAccess)
+| where publicNetworkAccess != "Disabled"
+// Trigger logic: Extract the first trigger type via Regex
+| extend triggersDefinition = tostring(properties.definition.triggers)
+| extend FirstTriggerType = extract("\"type\"\\s*:\\s*\"([^\"]+)\"", 1, triggersDefinition)
+// Firewall / IP Whitelisting Check
+| extend accessControl = properties.accessControl
+| extend allowedIpRanges = accessControl.triggers.allowedCallerIpAddresses
+| extend HasIpWhitelist = iif(isnotempty(allowedIpRanges) and array_length(allowedIpRanges) > 0, "Yes", "No")
+| project 
+    Name = name, 
+    ResourceGroup = resourceGroup, 
+    State, 
+    Location = location, 
+    FirstTriggerType, 
+    HasIpWhitelist
+| order by State desc, Name asc
